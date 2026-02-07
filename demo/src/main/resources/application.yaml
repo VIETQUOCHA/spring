@@ -1,0 +1,23 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: demo
+
+  datasource:
+    url: jdbc:mysql://localhost:3306/demo?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+    username: root          # thay bằng user thật nếu có
+    password: root          # thay bằng pass thật
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update      # dev thì ok, prod đổi thành validate
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true    # làm log SQL đẹp hơn
+        dialect: org.hibernate.dialect.MySQLDialect
+jwt:
+  secret-key: ${SECRET_KEY}
