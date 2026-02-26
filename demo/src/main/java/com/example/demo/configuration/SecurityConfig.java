@@ -18,6 +18,7 @@ import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
@@ -27,6 +28,7 @@ import java.nio.charset.StandardCharsets;
 @RequiredArgsConstructor
 public class SecurityConfig {
     private final UserDetailServiceCustomizer userDetailService;
+    private final JwtDecoder jwtDecoder;
     @Value("jwt.${secret-key}")
     private String secretKey;
     @Bean
@@ -34,18 +36,12 @@ public class SecurityConfig {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(authorize ->
-                        authorize.requestMatchers("/create","/users","/login").permitAll()
+                        authorize.requestMatchers("/create","/login","/api/auth/refresh").permitAll()
                                 .anyRequest().authenticated())
-                .oauth2ResourceServer(oauth2-> oauth2.jwt(Customizer.withDefaults()));
+                .addFilterBefore(new JwtTypeFilter(), UsernamePasswordAuthenticationFilter.class)
+                .oauth2ResourceServer(oauth2->
+                        oauth2.jwt(jwtConfigurer -> jwtConfigurer.decoder(jwtDecoder)));
         return http.build();
-    }
-
-    @Bean
-    public JwtDecoder jwtDecoder(){
-        SecretKeySpec secretKeySpec = new SecretKeySpec(secretKey.getBytes(StandardCharsets.UTF_8),"HS512");
-        return NimbusJwtDecoder.withSecretKey(secretKeySpec)
-                .macAlgorithm(MacAlgorithm.HS512)
-                .build();
     }
 
     @Bean
